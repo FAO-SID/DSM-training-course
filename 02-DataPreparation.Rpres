@@ -1,0 +1,101 @@
+Soil Data Preparation
+========================================================
+author: Guillermo Federico Olmedo
+date: 12th March 2018
+autosize: true 
+
+Soil Profiles and Soil Augers
+========================================== 
+
+* Soil profiles are complex real-world entities. 
+* They are composed of soil layers which form soil horizons; 
+* the soil layers have different properties and these properties are evaluated with different methods.  
+
+As we know, soil and vertical soil properties are landscape elements and part of matter dynamics (water, nutrients, gases, habitat, etc.). Local soil samples or soil profiles add a third dimension into the spatial assessment of soil properties in the landscape. 
+
+Example of soil databases (site-level data table)
+=========================================
+
+```{r site-level, echo=F}
+dat <- read.csv("examples/site-ex.csv")
+knitr::kable(dat, caption = "Example for site-level data table", booktabs = TRUE)
+```
+
+Example of soil databases (profile-description table)
+=========================================
+
+```{r horizon-level, echo=FALSE}
+dat <- read.csv("examples/horizons-ex.csv")
+knitr::kable(dat, caption = "Example for profile-description table", booktabs = TRUE)
+```
+
+Loading the data
+=====================================================================
+```{r, results='hold'}
+dat <- read.csv(file = "data/horizons.csv")
+
+# Explore the data
+str(dat)
+summary(dat)
+```
+
+```{r}
+dat_sites <- read.csv(file = "data/site-level.csv")
+
+# Explore the data
+str(dat_sites)
+```
+
+Coarse Fragments
+==========================================
+```{r}
+# summary of column CRF (Coarse Fragments) in the example data base
+summary(dat$CRF)
+
+# Convert NA's to 0
+dat$CRF[is.na(dat$CRF)] <- 0
+
+hist(dat$CRF, col = "light gray")
+```
+
+
+Bulk density
+============================================
+* saini_1966
+$$BD = 1.62-0.06 * OM$$ 
+
+* Drew1973
+$$BD = 1/(0.6268 + 0.0361 * OM)$$
+
+* Jeffrey1970note
+$$BD = 1.482 - 0.6786 * (log OM)$$
+
+
+Bulk density
+============================================
+* Grigal1989
+$$BD = 0.669 + 0.941 * e^{(-0,06 * OM)}$$
+
+* adams1973effect
+$$BD = 100/(OM/0.244 + (100-OM))/MBD$$
+
+* honeysett1989use
+$$BD = 1/(0.564 + 0.0556*OM)$$
+
+Creating a pedo transfer function in R for Bulk density
+==================================================================
+```{r}
+# Creating a function in R to estimate BLD using the SOC
+# SOC is the soil organic carbon content in \%
+estimateBD <- function(SOC, method="Saini1996"){
+  OM <- SOC * 1.724
+  if(method=="Saini1996"){BD <- 1.62 - 0.06 * OM}
+  if(method=="Drew1973"){BD <- 1 / (0.6268 + 0.0361 * OM)}
+  if(method=="Jeffrey1979"){BD <- 1.482 - 0.6786 * (log(OM))}
+  if(method=="Grigal1989"){BD <- 0.669 + 0.941 * exp(1)^(-0.06 * OM)}
+  if(method=="Adams1973"){BD <- 100 / (OM /0.244 + (100 - OM)/2.65)}
+  if(method=="Honeyset_Ratkowsky1989"){BD <- 1/(0.564 + 0.0556 * OM)}
+  return(BD)
+}
+```
+
